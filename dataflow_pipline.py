@@ -9,14 +9,20 @@ TRANSACTION_SCHEMA = "TransactionID:INTEGER,CustomerID:INTEGER,Amount:FLOAT,Curr
 # Email Validation Regex
 EMAIL_REGEX = re.compile(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
 
+def has_nulls(fields):
+    """ Returns True if any field is empty or whitespace-only """
+    return any(f.strip() == "" for f in fields)
+
+
 # Data Validation & Cleansing Functions
 def validate_customer(record):
     """ Validate & Clean Customer Data """
     try:
         fields = record.split(",")
-        if len(fields) != 5:
+        if len(fields) != 5 or has_nulls(fields):
             return None  # Invalid row
 
+        
         customer_id = int(fields[0])
         email = fields[2]
         phone = fields[3]
@@ -64,6 +70,9 @@ def validate_transaction(record):
             return None
         if not re.match(r"\d{4}-\d{2}-\d{2}", date):  # Validate Date format (YYYY-MM-DD)
             return None
+        if has_nulls(fields):
+            return None
+
 
         return {
             "TransactionID": transaction_id,
