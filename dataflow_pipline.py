@@ -4,7 +4,7 @@ import re
 
 # Define BigQuery Schema
 CUSTOMER_SCHEMA = "CustomerID:INTEGER,Name:STRING,Email:STRING,Phone:STRING,City:STRING"
-TRANSACTION_SCHEMA = "TransactionID:INTEGER,CustomerID:INTEGER,Amount:FLOAT,Currency:STRING,Date:STRING"
+TRANSACTION_SCHEMA = "TransactionID:INTEGER,CustomerID:INTEGER,Amount:FLOAT,Currency:STRING,TransactionDate:date"
 
 # Email Validation Regex
 EMAIL_REGEX = re.compile(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$")
@@ -59,7 +59,7 @@ def validate_transaction(record):
         customer_id = int(fields[1])
         amount = float(fields[2])
         currency = fields[3]
-        date = fields[4]
+        TransactionDate = fields[4]
 
         # Validation checks
         if transaction_id <= 0 or customer_id <= 0:
@@ -68,7 +68,7 @@ def validate_transaction(record):
             return None
         if currency != "GBP":  # Extend validation if needed
             return None
-        if not re.match(r"\d{4}-\d{2}-\d{2}", date):  # Validate Date format (YYYY-MM-DD)
+        if not re.match(r"\d{4}-\d{2}-\d{2}", TransactionDate):  # Validate Date format (YYYY-MM-DD)
             return None
         if has_nulls(fields):
             return None
@@ -79,7 +79,7 @@ def validate_transaction(record):
             "CustomerID": customer_id,
             "Amount": amount,
             "Currency": currency,
-            "Date": date
+            "TransactionDate":TransactionDate
         }
     except Exception:
         return None  # Error handling
@@ -124,4 +124,5 @@ with beam.Pipeline(options=options) as p:
     )
 
 print("Pipeline with data validation successfully deployed!")
+
 
