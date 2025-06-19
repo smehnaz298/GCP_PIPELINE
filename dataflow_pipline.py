@@ -88,8 +88,11 @@ def validate_transaction(record):
 options = PipelineOptions(
     runner="DataflowRunner",
     project="gcp-test-project-395421",
-    temp_location="gs://poc-data-pipeline-bucket",
-    region="europe-west1"
+    temp_location="gs://poc-data-pipeline-bucket/data/",
+    region="europe-west1",
+    staging_location="gs://poc-data-pipeline-bucket/staging/",
+    num_workers=1,  # Request fewer workers
+    max_num_workers=2  # Set a small limit
 )
 
 # Apache Beam Pipeline with Data Validation
@@ -97,7 +100,7 @@ with beam.Pipeline(options=options) as p:
     # Read and validate customer data
     customers = (
         p
-        | "Read Customers" >> beam.io.ReadFromText("gs://poc-data-pipeline-bucket/customer.csv", skip_header_lines=1)
+        | "Read Customers" >> beam.io.ReadFromText("gs://poc-data-pipeline-bucket/data/customer.csv", skip_header_lines=1)
         | "Validate Customers" >> beam.Map(validate_customer)
         | "Filter Invalid Customers" >> beam.Filter(lambda x: x is not None)
         | "Write Customers to BigQuery" >> beam.io.WriteToBigQuery(
@@ -110,7 +113,7 @@ with beam.Pipeline(options=options) as p:
     # Read and validate transaction data
     transactions = (
         p
-        | "Read Transactions" >> beam.io.ReadFromText("gs://poc-data-pipeline-bucket/transactions.csv", skip_header_lines=1)
+        | "Read Transactions" >> beam.io.ReadFromText("gs://poc-data-pipeline-bucket/data/transactions.csv", skip_header_lines=1)
         | "Validate Transactions" >> beam.Map(validate_transaction)
         | "Filter Invalid Transactions" >> beam.Filter(lambda x: x is not None)
         | "Write Transactions to BigQuery" >> beam.io.WriteToBigQuery(
