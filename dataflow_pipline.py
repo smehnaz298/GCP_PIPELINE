@@ -1,5 +1,6 @@
 import apache_beam as beam
 from apache_beam.options.pipeline_options import PipelineOptions
+from apache_beam.metrics.metric import Metrics
 import re
 
 # Define BigQuery Schema
@@ -13,6 +14,8 @@ def has_nulls(fields):
     """ Returns True if any field is empty or whitespace-only """
     return any(f.strip() == "" for f in fields)
 
+null_customer_counter = Metrics.counter("validation", "null_customers")
+null_transaction_counter = Metrics.counter("validation", "null_transactions")
 
 # Data Validation & Cleansing Functions
 def validate_customer(record):
@@ -20,10 +23,11 @@ def validate_customer(record):
     try:
         fields = record.split(",")
         if len(fields) != 5 or has_nulls(fields):
+            null_customer_counter.inc()
             return None  # Invalid row
 
-        
         customer_id = int(fields[0])
+        name = fields[1]
         email = fields[2]
         phone = fields[3]
         city = fields[4]
@@ -40,7 +44,7 @@ def validate_customer(record):
 
         return {
             "CustomerID": customer_id,
-            "Name": fields[1],
+            "Name": name,
             "Email": email,
             "Phone": phone,
             "City": city
@@ -48,11 +52,14 @@ def validate_customer(record):
     except Exception:
         return None  # Error handling
 
+
+
 def validate_transaction(record):
     """ Validate & Clean Transaction Data """
     try:
         fields = record.split(",")
-        if len(fields) != 5:
+        if len(fields) != 5 or has_nulls(fields):
+            null_transaction_counter.inc()
             return None  # Invalid row
 
         transaction_id = int(fields[0])
@@ -63,14 +70,16 @@ def validate_transaction(record):
 
         # Validation checks
         if transaction_id <= 0 or customer_id <= 0:
+            null_transaction_counter.inc()
             return None
         if amount <= 0:
+            null_transaction_counter.inc()
             return None
         if currency != "GBP":  # Extend validation if needed
+            null_transaction_counter.inc()
             return None
         if not re.match(r"\d{4}-\d{2}-\d{2}", TransactionDate):  # Validate Date format (YYYY-MM-DD)
-            return None
-        if has_nulls(fields):
+            null_transaction_counter.inc()
             return None
 
 
@@ -82,6 +91,7 @@ def validate_transaction(record):
             "TransactionDate":TransactionDate
         }
     except Exception:
+        null_transaction_counter.inc()
         return None  # Error handling
 
 # Pipeline Options
@@ -106,7 +116,7 @@ with beam.Pipeline(options=options) as p:
         | "Write Customers to BigQuery" >> beam.io.WriteToBigQuery(
             "ecommerce.customer",
             schema=CUSTOMER_SCHEMA,
-            write_disposition=beam.io.BigQueryDisposition.WRITE_APPEND
+            write_disposition=beam.io.BigQueryDisposition.WRITE_TRUNCATE
         )
     )
 
@@ -119,7 +129,7 @@ with beam.Pipeline(options=options) as p:
         | "Write Transactions to BigQuery" >> beam.io.WriteToBigQuery(
             "ecommerce.transactions",
             schema=TRANSACTION_SCHEMA,
-            write_disposition=beam.io.BigQueryDisposition.WRITE_APPEND
+            write_disposition=beam.io.BigQueryDisposition.WRITE_TRUNCATE
         )
     )
 
