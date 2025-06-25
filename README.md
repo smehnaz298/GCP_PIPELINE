@@ -22,7 +22,7 @@ gcloud services enable \
   cloudbuild.googleapis.com \
   iam.googleapis.com
 
-**## Grant your service account the following roles:**
+## Grant your service account the following roles:
 
 
 Storage Admin
@@ -36,13 +36,13 @@ Service Account User
 Logging Writer
 
 
-GCS Structure
+## GCS Structure
 
 gsutil mb -l europe-west1 gs://poc-data-pipeline-bucket/
 gsutil mkdir gs://poc-data-pipeline-bucket/output/
 gsutil mkdir gs://poc-data-pipeline-bucket/schemas/
 
-Schema File
+## Schema File
 Upload a schema JSON file like:
 
 [
@@ -53,11 +53,11 @@ Upload a schema JSON file like:
   { "name": "city", "type": "STRING" }
 ]
 
-Upload the file
+## Upload the file
 
 gsutil cp customer_schema.json gs://poc-data-pipeline-bucket/schemas/
 
-DEPLOY THE CLOUD FUNCTION
+## DEPLOY THE CLOUD FUNCTION
 
 gcloud functions deploy dataflow-csv-trigger \
   --runtime python312 \
@@ -70,7 +70,7 @@ gcloud functions deploy dataflow-csv-trigger \
   --memory 512MB \
   --timeout 60s
 
-Terraform Support
+## Terraform Support
 If managing infrastructure via code, define variables such as:
 
 project_id         = "your-project-id"
@@ -79,12 +79,12 @@ bucket_name        = "poc-data-pipeline-bucket"
 schema_gcs_path    = "gs://poc-data-pipeline-bucket/schemas/customer_schema.json"
 function_name      = "dataflow-csv-trigger"
 
-INTIALISE AND RUN TERRAFORM
+## INTIALISE AND RUN TERRAFORM
 
 terraform init
 terraform apply
 
-How to Use
+## How to Use
 
 Drop a .csv file into the root of gs://poc-data-pipeline-bucket/
 
@@ -94,7 +94,7 @@ Dataflow launches using File_Format_Conversion Flex Template
 
 Parquet file is written to /output/ path in the same bucket
 
-Assumptions
+## Assumptions
 CSV input contains headers
 
 Schema is stored and accessible in GCS
@@ -106,7 +106,7 @@ Function runs in europe-west1
 🌱 Future Improvements
 ✨ Add retry logic and exponential backoff on failure
 
-✉️ Alerting via Slack/email on job outcome
+✉️ Alerting via Teams/email on job outcome
 
 🔍 Auto-validate CSV vs schema prior to launch
 
