@@ -1,0 +1,42 @@
+name: Deploy Cloud Function
+
+on:
+  push:
+    branches: [ main ]  # or whichever branch you use
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+    - name: Set up gcloud CLI
+      uses: google-github-actions/setup-gcloud@v2
+      with:
+        project_id: gcp-test-project-395421
+
+    - name: Deploy Cloud Function
+      run: |
+        gcloud functions deploy dataflow-csv-trigger \
+          --runtime python312 \
+          --trigger-event google.storage.object.finalize \
+          --trigger-resource poc-data-pipeline-bucket \
+          --entry-point launch_dataflow \
+          --region europe-west1 \
+          --source ./cloud-function \
+          --set-env-vars GCP_PROJECT=gcp-test-project-395421,REGION=europe-west1,TEMPLATE_SPEC_PATH=gs://dataflow-templates/latest/flex/File_Format_Conversion \
+          --memory 512MB \
+          --timeout 60s \
+          --quiet
