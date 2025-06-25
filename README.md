@@ -22,7 +22,8 @@ gcloud services enable \
   cloudbuild.googleapis.com \
   iam.googleapis.com
 
-Grant your service account the following roles:
+**## Grant your service account the following roles:**
+
 
 Storage Admin
 
