@@ -1,0 +1,22 @@
+CREATE TABLE `gcp-test-project-395421.ecommerce.customer`
+(
+    CustomerID INT64,
+    Name STRING,
+    Email STRING,
+    Phone STRING,
+    City STRING
+)
+;
+
+
+
+CREATE TABLE `gcp-test-project-395421.ecommerce.transactions`
+(
+    TransactionID INT64,
+    CustomerID INT64,
+    Amount FLOAT64,
+    Currency STRING,
+    TransactionDate DATE
+)
+PARTITION BY TransactionDate
+CLUSTER BY CustomerID;
