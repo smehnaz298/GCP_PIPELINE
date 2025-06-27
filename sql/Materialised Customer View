@@ -1,0 +1,10 @@
+CREATE MATERIALIZED VIEW `gcp-test-project-395421.ecommerce.Materialised_Monthly_Customer_Spend`
+CLUSTER BY CustomerID AS
+SELECT
+  CustomerID,
+  FORMAT_TIMESTAMP('%Y-%m', TIMESTAMP(TransactionDate)) AS Month,
+  COUNT(*) AS Transaction_Count,
+  SUM(Amount) AS Total_Spend,
+  AVG(Amount) AS Avg_Spend
+FROM `gcp-test-project-395421.ecommerce.transactions`
+GROUP BY CustomerID, Month;

@@ -7,7 +7,6 @@ provider "google" {
 resource "google_storage_bucket" "pipeline" {
   name     = "poc-data-pipeline-bucket_tf"
   location = "EU"
-
   force_destroy = true
   uniform_bucket_level_access = true
 
@@ -83,16 +82,19 @@ resource "google_bigquery_table" "quarantine_transactions_tf" {
   ])
 }
 
+# Upload Cloud Function code to GCS
 resource "google_storage_bucket_object" "function_code" {
   name   = "cloud-function.zip"
   bucket = "poc-data-pipeline-bucket"
   source = "cloud-function.zip"
 }
 
+# Cloud Function to trigger Dataflow Flex Template
 resource "google_cloudfunctions_function" "dataflow_trigger" {
   name        = "dataflow-csv-trigger"
   runtime     = "python312"
   entry_point = "launch_dataflow"
+
   source_archive_bucket = "poc-data-pipeline-bucket"
   source_archive_object = "cloud-function.zip"
   available_memory_mb   = 256
@@ -104,14 +106,43 @@ resource "google_cloudfunctions_function" "dataflow_trigger" {
     TEMPLATE_SPEC_PATH = "gs://dataflow-templates/latest/flex/File_Format_Conversion"
   }
 
-
   event_trigger {
     event_type = "google.storage.object.finalize"
     resource   = "poc-data-pipeline-bucket_tf"
+    resource   = "poc-data-pipeline-bucket"
     failure_policy {
       retry = true
     }
+  }
 }
- 
-    
+
+# =====================
+# IAM ROLE BINDINGS
+# =====================
+
+# Service account deployed with Dataflow
+variable "dataflow_service_account" {
+  default = "dataflow-sa@gcp-test-project-395421.iam.gserviceaccount.com"
 }
+
+# Allow the Dataflow service account to run jobs
+resource "google_project_iam_member" "dataflow_worker" {
+  project = "gcp-test-project-395421"
+  role    = "roles/dataflow.worker"
+  member  = "serviceAccount:${var.dataflow_service_account}"
+}
+
+# BigQuery permissions
+resource "google_project_iam_member" "bq_editor" {
+  project = "gcp-test-project-395421"
+  role    = "roles/bigquery.dataEditor"
+  member  = "serviceAccount:${var.dataflow_service_account}"
+}
+
+# GCS permissions
+resource "google_project_iam_member" "storage_admin" {
+  project = "gcp-test-project-395421"
+  role    = "roles/storage.objectAdmin"
+  member  = "serviceAccount:${var.dataflow_service_account}"
+}
+

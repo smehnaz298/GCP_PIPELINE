@@ -6,7 +6,8 @@ CREATE TABLE `gcp-test-project-395421.ecommerce.customer`
     Phone STRING,
     City STRING
 )
-;
+CLUSTER BY CustomerID;
+
 
 
 
