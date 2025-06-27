@@ -108,8 +108,8 @@ resource "google_cloudfunctions_function" "dataflow_trigger" {
 
   event_trigger {
     event_type = "google.storage.object.finalize"
+    resource   = "poc-data-pipeline-bucket_tf"
     resource   = "poc-data-pipeline-bucket"
-
     failure_policy {
       retry = true
     }

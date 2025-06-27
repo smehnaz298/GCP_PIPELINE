@@ -1,6 +1,6 @@
 # GCP_PIPELINE
 
-# 🚀 Serverless CSV-to-Parquet Pipeline on GCP
+# 🚀 Serverless CSV-to-Big Query Pipeline on GCP
 
 This project automates the conversion of `.csv` files to `.parquet` format using Google Cloud services including Cloud Functions, Dataflow Flex Templates, and GCS. Lightweight, scalable, and ideal for production pipelines.
 
