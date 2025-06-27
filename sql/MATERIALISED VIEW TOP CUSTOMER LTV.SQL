@@ -1,3 +1,7 @@
+---CTE_CUSTOMER_LTV Calculates lifetime value of each customer by summing all transaction amounts from the transactions table:
+---PERCENT RANK - rank all customers by Lifetime_Value in descending order:assigns each customer a percentile from 0.0 (highest spender) to 1.0 (lowest).
+---SELECT -Filters to include only those customers whose percentile is ≤ 0.05, i.e., top 5% spenders:
+
 CREATE MATERIALIZED VIEW `gcp-test-project-395421.ecommerce.Materialised_Top_Customers_LTV`
 PARTITION BY DATE(_PARTITIONTIME)
 CLUSTER BY CustomerID
